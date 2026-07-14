@@ -121,6 +121,41 @@ gh auth login
 gh api repos/PufAnimalsDev/ComicShelf/pages -X POST -f build_type=workflow
 ```
 
+## Git workflow
+
+### Commits
+
+```
+<emoji> <type>: <short subject>
+
+[optional bullets for larger changes]
+```
+
+Examples: `✨ feat: …`, `🐛 fix: …`, `📦 data: …`, `🚀 deploy: …`
+
+### Branches and PRs
+
+1. Create a feature branch from `main` (e.g. `feat/auth-catalog-tiles-v5-backup`).
+2. Push the branch and open a PR into `main`.
+3. Use the PR template (Summary / Changes / Test plan).
+4. After merge, the **head branch is deleted automatically**.
+
+Enable auto-delete once in the repo:
+
+1. **[Settings → Pull Requests](https://github.com/PufAnimalsDev/ComicShelf/settings)** → check **Automatically delete head branches**.
+
+Or via CLI after `gh auth login`:
+
+```bash
+gh api repos/PufAnimalsDev/ComicShelf -X PATCH -f delete_branch_on_merge=true
+```
+
+When merging a PR from the terminal:
+
+```bash
+gh pr merge --delete-branch
+```
+
 ## License
 
 Public catalog data is for personal collection tracking. Marvel and DC characters and titles are property of their respective owners.
