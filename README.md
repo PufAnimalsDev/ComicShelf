@@ -12,12 +12,31 @@ Offline-first tracker for Polish Marvel and DC comic collections. Log in with a 
 4. Check **Posiadam** / **Przeczytane** for each issue.
 5. Use filters to search and narrow the list within that series.
 
-**Backup:**
+**Backup (home screen only):**
 
-- **Home** — export/import all catalogs (JSON v5)
-- **Inside a series** — export/import the whole catalog (JSON v4); reset clears only the current series
+- **Eksportuj kolekcję** — JSON v5 (all catalogs)
+- **Importuj kolekcję** — restore from v5 (overwrites your local progress)
 
-Data is stored in `localStorage` in the current browser. Export regularly if you switch devices or clear site data.
+Inside a series you only mark issues and optionally **Wyczyść tę serię**.
+
+Data is stored in `localStorage` in the current browser.
+
+## Initial state (seed from repo)
+
+[`data/initial-state.json`](data/initial-state.json) is loaded on login via `fetch` (GitHub Pages). For each catalog:
+
+- **No saved state yet** → seed is applied
+- **You already saved progress** (`localStorage` + user marker) → seed is **never** overwritten
+
+Update the seed after export:
+
+```bash
+node scripts/update-initial-state.js path/to/comicshelf-all-YYYY-MM-DD.json
+git add data/initial-state.json
+git commit -m "📦 data: update initial collection state"
+```
+
+New catalogs in seed apply only for users who do not yet have that catalog in `localStorage`.
 
 ## Access (password)
 
@@ -33,54 +52,23 @@ This updates [`js/auth-config.js`](js/auth-config.js) with a new hash. Commit on
 
 Default password after a fresh clone is `changeme` — change it before deploying.
 
-## JSON backup formats
+## JSON backup format (v5)
 
-### v4 — single catalog (export from inside a catalog)
-
-```json
-{
-  "app": "ComicShelf",
-  "catalog": "marvel-pl",
-  "version": 4,
-  "generatedAt": "2026-07-14T15:00:00.000Z",
-  "owned": ["Marvel NOW! — Egmont|1|Avengers: Wojna bez końca"],
-  "read": []
-}
-```
-
-### v5 — all catalogs (export from home / catalog tiles)
+Export from home produces v5 — the same format as [`data/initial-state.json`](data/initial-state.json):
 
 ```json
 {
   "app": "ComicShelf",
   "version": 5,
-  "generatedAt": "2026-07-14T15:00:00.000Z",
+  "generatedAt": "2026-07-14T18:44:07.625Z",
   "catalogs": {
-    "marvel-pl": {
-      "owned": ["..."],
-      "read": ["..."]
-    },
-    "dc-pl": {
-      "owned": ["..."],
-      "read": ["..."]
-    }
+    "marvel-pl": { "owned": ["..."], "read": ["..."] },
+    "dc-pl": { "owned": ["..."], "read": ["..."] }
   }
 }
 ```
 
-| Field | Description |
-|-------|-------------|
-| `generatedAt` | ISO 8601 timestamp when the backup was created |
-| `catalog` | Catalog identifier in v4 single exports (`marvel-pl`, `dc-pl`) |
-| `catalogs` | All catalog states in v5 multi exports |
-| `owned` / `read` | Arrays of comic IDs from the embedded catalog |
-
-**Import behavior:**
-
-- **Home screen** — accepts v5 (all catalogs), v4 (one catalog from `catalog` field), or legacy array (Marvel PL only)
-- **Inside a catalog** — accepts v4 for that catalog, or v5 (only the matching catalog section is applied)
-
-**Backward compatibility:** legacy plain arrays (owned only) and v3 exports with `exportedAt` are still accepted.
+Import on home accepts v5, v4 (single catalog), or legacy array (Marvel PL only).
 
 ## Project structure
 

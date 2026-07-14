@@ -34,8 +34,8 @@
     <section id="homeView" class="view" hidden>
       <h2 class="view-title">Twoje katalogi</h2>
       <div class="actions home-actions">
-        <button id="exportAllBtn" class="primary">Eksportuj wszystkie katalogi</button>
-        <button id="importAllBtn">Importuj wszystkie katalogi</button>
+        <button id="exportAllBtn" class="primary">Eksportuj kolekcję</button>
+        <button id="importAllBtn">Importuj kolekcję</button>
         <input type="file" id="importAllFile" accept="application/json" hidden>
       </div>
       <div id="catalogGrid" class="catalog-grid"></div>
@@ -78,9 +78,6 @@
       </section>
 
       <div class="actions">
-        <button id="exportBtn">Eksportuj ten katalog</button>
-        <button id="importBtn">Importuj do tego katalogu</button>
-        <input type="file" id="importFile" accept="application/json" hidden>
         <button id="resetBtn">Wyczyść tę serię</button>
       </div>
 
@@ -96,6 +93,7 @@
   <script src="js/catalog.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/backup.js"></script>
+  <script src="js/bootstrap.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/home.js"></script>
   <script src="js/series-home.js"></script>

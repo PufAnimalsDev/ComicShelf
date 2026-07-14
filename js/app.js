@@ -3,10 +3,8 @@ window.ComicShelfApp = (() => {
   const list = () => $('list');
 
   let catalogId = null;
-  let catalogMeta = null;
   let collectionName = null;
   let comics = [];
-  let validIds = new Set();
   let owned = new Set();
   let read = new Set();
   let eventsBound = false;
@@ -116,46 +114,14 @@ window.ComicShelfApp = (() => {
         render();
       }
     };
-
-    $('exportBtn').onclick = () => {
-      window.ComicShelfBackup.downloadBackup({
-        owned,
-        read,
-        catalogId: catalogMeta.id,
-      });
-    };
-
-    $('importBtn').onclick = () => $('importFile').click();
-
-    $('importFile').onchange = async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      try {
-        const result = window.ComicShelfBackup.parseBackup(
-          await file.text(),
-          validIds,
-          catalogId
-        );
-        owned = result.owned;
-        read = result.read;
-        save();
-        render();
-        alert(window.ComicShelfBackup.importMessage(result));
-      } catch {
-        alert('Nieprawidłowy plik kopii.');
-      }
-
-      e.target.value = '';
-    };
   }
 
   function openCollection(nextCatalogId, nextCollectionName) {
     catalogId = nextCatalogId;
     collectionName = nextCollectionName;
-    catalogMeta = window.ComicShelfCatalog[catalogId];
+    const catalogMeta = window.ComicShelfCatalog[catalogId];
     comics = window[catalogMeta.dataKey] || [];
-    validIds = new Set(comics.map((x) => x.id));
+    const validIds = new Set(comics.map((x) => x.id));
     ({ owned, read } = window.ComicShelfStorage.loadState(catalogId, validIds));
     window.ComicShelfStorage.saveActiveCatalog(catalogId);
 

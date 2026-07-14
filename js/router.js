@@ -17,6 +17,12 @@ window.ComicShelfRouter = (() => {
     }
   }
 
+  async function enterApp() {
+    await window.ComicShelfBootstrap.applySeedIfNeeded();
+    window.ComicShelfHome.init();
+    showView('home');
+  }
+
   function openCatalog(catalogId) {
     window.ComicShelfSeriesHome.render(catalogId);
     showView('catalog');
@@ -68,8 +74,7 @@ window.ComicShelfRouter = (() => {
         }
 
         passwordInput.value = '';
-        window.ComicShelfHome.init();
-        showView('home');
+        await enterApp();
       } catch (err) {
         errorEl.textContent =
           err.message === 'AUTH_NOT_CONFIGURED'
@@ -87,8 +92,7 @@ window.ComicShelfRouter = (() => {
     bindAuthForm();
 
     if (window.ComicShelfAuth.isAuthenticated()) {
-      window.ComicShelfHome.init();
-      showView('home');
+      enterApp();
     } else {
       showView('auth');
     }
