@@ -53,10 +53,17 @@ ComicShelf/
 
 Pushes to `main` deploy automatically to GitHub Pages via GitHub Actions.
 
-To enable Pages on a fresh repo:
+**One-time setup** (required before the first deploy succeeds):
+
+1. Open [ComicShelf → Settings → Pages](https://github.com/PufAnimalsDev/ComicShelf/settings/pages).
+2. Under **Build and deployment**, set **Source** to **GitHub Actions**.
+3. Re-run the failed workflow from [Actions](https://github.com/PufAnimalsDev/ComicShelf/actions), or push any commit to `main`.
+
+Alternatively, after installing and logging into GitHub CLI:
 
 ```bash
-gh repo edit PufAnimalsDev/ComicShelf --enable-pages --pages-build-type workflow
+gh auth login
+gh api repos/PufAnimalsDev/ComicShelf/pages -X POST -f build_type=workflow
 ```
 
 ## License
