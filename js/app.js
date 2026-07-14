@@ -1,59 +1,14 @@
-(() => {
+window.ComicShelfApp = (() => {
   const $ = (id) => document.getElementById(id);
-  const list = $('list');
+  const list = () => $('list');
 
-  let catalogId = window.ComicShelfStorage.loadActiveCatalog();
-  let catalogMeta = window.ComicShelfCatalog[catalogId];
-  let comics = window[catalogMeta.dataKey] || [];
-  let validIds = new Set(comics.map((x) => x.id));
-  let { owned, read } = window.ComicShelfStorage.loadState(catalogId, validIds);
-
-  function populateCatalogSelect() {
-    const select = $('catalog');
-    select.innerHTML = '';
-    for (const meta of Object.values(window.ComicShelfCatalog)) {
-      const option = document.createElement('option');
-      option.value = meta.id;
-      option.textContent = meta.name;
-      option.selected = meta.id === catalogId;
-      select.appendChild(option);
-    }
-  }
-
-  function populateCollectionSelect() {
-    const select = $('collection');
-    select.innerHTML = '<option value="">Wszystkie kolekcje</option>';
-    [...new Set(comics.map((x) => x.collection))].forEach((collection) => {
-      const option = document.createElement('option');
-      option.value = collection;
-      option.textContent = collection;
-      select.appendChild(option);
-    });
-  }
-
-  function resetFilters() {
-    $('search').value = '';
-    $('collection').value = '';
-    $('status').value = 'all';
-    $('readStatus').value = 'all';
-  }
-
-  function switchCatalog(nextCatalogId) {
-    if (nextCatalogId === catalogId) return;
-
-    window.ComicShelfStorage.saveState(catalogId, owned, read);
-    catalogId = nextCatalogId;
-    window.ComicShelfStorage.saveActiveCatalog(catalogId);
-    catalogMeta = window.ComicShelfCatalog[catalogId];
-    comics = window[catalogMeta.dataKey] || [];
-    validIds = new Set(comics.map((x) => x.id));
-    ({ owned, read } = window.ComicShelfStorage.loadState(catalogId, validIds));
-
-    populateCollectionSelect();
-    resetFilters();
-    stats();
-    render();
-  }
+  let catalogId = null;
+  let catalogMeta = null;
+  let comics = [];
+  let validIds = new Set();
+  let owned = new Set();
+  let read = new Set();
+  let eventsBound = false;
 
   function save() {
     window.ComicShelfStorage.saveState(catalogId, owned, read);
@@ -94,10 +49,10 @@
 
   function render() {
     const arr = filtered();
-    list.innerHTML = '';
+    list().innerHTML = '';
 
     if (!arr.length) {
-      list.innerHTML = '<div class="empty">Brak pozycji pasujących do filtrów.</div>';
+      list().innerHTML = '<div class="empty">Brak pozycji pasujących do filtrów.</div>';
       return;
     }
 
@@ -122,7 +77,7 @@
         render();
       };
 
-      list.appendChild(el);
+      list().appendChild(el);
     }
   }
 
@@ -132,76 +87,98 @@
     );
   }
 
-  populateCatalogSelect();
-  populateCollectionSelect();
-
-  $('catalog').addEventListener('change', (e) => switchCatalog(e.target.value));
-
-  ['search', 'collection', 'status', 'readStatus'].forEach((id) =>
-    $(id).addEventListener(id === 'search' ? 'input' : 'change', render)
-  );
-
-  $('markVisible').onclick = () => {
-    filtered().forEach((x) => owned.add(x.id));
-    save();
-    render();
-  };
-
-  $('unmarkVisible').onclick = () => {
-    filtered().forEach((x) => owned.delete(x.id));
-    save();
-    render();
-  };
-
-  $('markReadVisible').onclick = () => {
-    filtered().forEach((x) => read.add(x.id));
-    save();
-    render();
-  };
-
-  $('unmarkReadVisible').onclick = () => {
-    filtered().forEach((x) => read.delete(x.id));
-    save();
-    render();
-  };
-
-  $('resetBtn').onclick = () => {
-    if (confirm('Na pewno usunąć wszystkie oznaczenia posiadania i przeczytania?')) {
-      owned.clear();
-      read.clear();
-      save();
-      render();
-    }
-  };
-
-  $('exportBtn').onclick = () => {
-    window.ComicShelfBackup.downloadBackup({
-      owned,
-      read,
-      catalogId: catalogMeta.id,
+  function populateCollectionSelect() {
+    const select = $('collection');
+    select.innerHTML = '<option value="">Wszystkie kolekcje</option>';
+    [...new Set(comics.map((x) => x.collection))].forEach((collection) => {
+      const option = document.createElement('option');
+      option.value = collection;
+      option.textContent = collection;
+      select.appendChild(option);
     });
-  };
+  }
 
-  $('importBtn').onclick = () => $('importFile').click();
+  function resetFilters() {
+    $('search').value = '';
+    $('collection').value = '';
+    $('status').value = 'all';
+    $('readStatus').value = 'all';
+  }
 
-  $('importFile').onchange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  function bindEvents() {
+    if (eventsBound) return;
+    eventsBound = true;
 
-    try {
-      const result = window.ComicShelfBackup.parseBackup(await file.text(), validIds);
-      owned = result.owned;
-      read = result.read;
-      save();
-      render();
-      alert(window.ComicShelfBackup.importMessage(result));
-    } catch {
-      alert('Nieprawidłowy plik kopii.');
+    ['search', 'collection', 'status', 'readStatus'].forEach((id) =>
+      $(id).addEventListener(id === 'search' ? 'input' : 'change', render)
+    );
+
+    $('resetBtn').onclick = () => {
+      if (confirm('Na pewno usunąć wszystkie oznaczenia posiadania i przeczytania?')) {
+        owned.clear();
+        read.clear();
+        save();
+        render();
+      }
+    };
+
+    $('exportBtn').onclick = () => {
+      window.ComicShelfBackup.downloadBackup({
+        owned,
+        read,
+        catalogId: catalogMeta.id,
+      });
+    };
+
+    $('importBtn').onclick = () => $('importFile').click();
+
+    $('importFile').onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      try {
+        const result = window.ComicShelfBackup.parseBackup(
+          await file.text(),
+          validIds,
+          catalogId
+        );
+        owned = result.owned;
+        read = result.read;
+        save();
+        render();
+        alert(window.ComicShelfBackup.importMessage(result));
+      } catch {
+        alert('Nieprawidłowy plik kopii.');
+      }
+
+      e.target.value = '';
+    };
+  }
+
+  function openCatalog(nextCatalogId) {
+    catalogId = nextCatalogId;
+    catalogMeta = window.ComicShelfCatalog[catalogId];
+    comics = window[catalogMeta.dataKey] || [];
+    validIds = new Set(comics.map((x) => x.id));
+    ({ owned, read } = window.ComicShelfStorage.loadState(catalogId, validIds));
+    window.ComicShelfStorage.saveActiveCatalog(catalogId);
+
+    $('catalogTitle').textContent = catalogMeta.name;
+    populateCollectionSelect();
+    resetFilters();
+    bindEvents();
+    stats();
+    render();
+  }
+
+  function closeCatalog() {
+    if (catalogId) {
+      window.ComicShelfStorage.saveState(catalogId, owned, read);
     }
+  }
 
-    e.target.value = '';
+  return {
+    openCatalog,
+    closeCatalog,
   };
-
-  stats();
-  render();
 })();

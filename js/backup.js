@@ -1,6 +1,7 @@
 window.ComicShelfBackup = (() => {
   const APP_NAME = 'ComicShelf';
-  const VERSION = 4;
+  const VERSION_SINGLE = 4;
+  const VERSION_ALL = 5;
 
   function formatDate(iso) {
     if (!iso) return null;
@@ -23,12 +24,38 @@ window.ComicShelfBackup = (() => {
     return `${y}-${m}-${d}`;
   }
 
+  function getValidIds(catalogId) {
+    const meta = window.ComicShelfCatalog[catalogId];
+    if (!meta) return new Set();
+    const comics = window[meta.dataKey] || [];
+    return new Set(comics.map((x) => x.id));
+  }
+
+  function filterState(ownedRaw, readRaw, validIds) {
+    const ownedBefore = ownedRaw.length;
+    const readBefore = readRaw.length;
+    const owned = new Set(ownedRaw.filter((id) => validIds.has(id)));
+    const read = new Set(readRaw.filter((id) => validIds.has(id)));
+
+    return {
+      owned,
+      read,
+      stats: {
+        owned: owned.size,
+        read: read.size,
+        skippedOwned: ownedBefore - owned.size,
+        skippedRead: readBefore - read.size,
+        skippedTotal: ownedBefore - owned.size + (readBefore - read.size),
+      },
+    };
+  }
+
   function exportBackup({ owned, read, catalogId }) {
     const generatedAt = new Date().toISOString();
     const payload = {
       app: APP_NAME,
       catalog: catalogId,
-      version: VERSION,
+      version: VERSION_SINGLE,
       generatedAt,
       owned: [...owned],
       read: [...read],
@@ -44,8 +71,47 @@ window.ComicShelfBackup = (() => {
     };
   }
 
+  function exportAllBackup() {
+    const generatedAt = new Date().toISOString();
+    const catalogs = {};
+
+    for (const catalogId of Object.keys(window.ComicShelfCatalog)) {
+      const validIds = getValidIds(catalogId);
+      const { owned, read } = window.ComicShelfStorage.loadState(catalogId, validIds);
+      catalogs[catalogId] = {
+        owned: [...owned],
+        read: [...read],
+      };
+    }
+
+    const payload = {
+      app: APP_NAME,
+      version: VERSION_ALL,
+      generatedAt,
+      catalogs,
+    };
+
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: 'application/json',
+    });
+
+    return {
+      blob,
+      filename: `comicshelf-all-${fileDate(generatedAt)}.json`,
+    };
+  }
+
   function downloadBackup(options) {
     const { blob, filename } = exportBackup(options);
+    triggerDownload(blob, filename);
+  }
+
+  function downloadAllBackup() {
+    const { blob, filename } = exportAllBackup();
+    triggerDownload(blob, filename);
+  }
+
+  function triggerDownload(blob, filename) {
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = filename;
@@ -53,12 +119,43 @@ window.ComicShelfBackup = (() => {
     URL.revokeObjectURL(link.href);
   }
 
-  function parseBackup(jsonText, validIds) {
-    let data;
+  function parseJson(jsonText) {
     try {
-      data = JSON.parse(jsonText);
+      return JSON.parse(jsonText);
     } catch {
       throw new Error('INVALID_JSON');
+    }
+  }
+
+  function isMultiFormat(data) {
+    return Boolean(data && data.catalogs && typeof data.catalogs === 'object');
+  }
+
+  function parseBackup(jsonText, validIds, catalogId = null) {
+    const data = parseJson(jsonText);
+
+    if (isMultiFormat(data)) {
+      if (!catalogId) {
+        throw new Error('CATALOG_REQUIRED');
+      }
+
+      const entry = data.catalogs[catalogId];
+      if (!entry) {
+        throw new Error('CATALOG_NOT_FOUND');
+      }
+
+      const ownedRaw = entry.owned || [];
+      const readRaw = entry.read || [];
+
+      if (!Array.isArray(ownedRaw)) throw new Error('INVALID_OWNED');
+      if (!Array.isArray(readRaw)) throw new Error('INVALID_READ');
+
+      const filtered = filterState(ownedRaw, readRaw, validIds);
+
+      return {
+        ...filtered,
+        generatedAt: data.generatedAt || data.exportedAt || null,
+      };
     }
 
     const isLegacyArray = Array.isArray(data);
@@ -77,27 +174,80 @@ window.ComicShelfBackup = (() => {
       ? null
       : data.generatedAt || data.exportedAt || null;
 
-    const ownedBefore = ownedRaw.length;
-    const readBefore = readRaw.length;
-
-    const owned = new Set(ownedRaw.filter((id) => validIds.has(id)));
-    const read = new Set(readRaw.filter((id) => validIds.has(id)));
-
-    const skippedOwned = ownedBefore - owned.size;
-    const skippedRead = readBefore - read.size;
+    const filtered = filterState(ownedRaw, readRaw, validIds);
 
     return {
-      owned,
-      read,
+      ...filtered,
       generatedAt,
-      stats: {
-        owned: owned.size,
-        read: read.size,
-        skippedOwned,
-        skippedRead,
-        skippedTotal: skippedOwned + skippedRead,
-      },
     };
+  }
+
+  function parseAllBackup(jsonText) {
+    const data = parseJson(jsonText);
+    const generatedAt = data.generatedAt || data.exportedAt || null;
+    const results = {};
+    const totals = {
+      owned: 0,
+      read: 0,
+      skippedTotal: 0,
+      catalogCount: 0,
+    };
+
+    if (isMultiFormat(data)) {
+      for (const catalogId of Object.keys(window.ComicShelfCatalog)) {
+        const entry = data.catalogs[catalogId];
+        if (!entry) continue;
+
+        const validIds = getValidIds(catalogId);
+        const ownedRaw = entry.owned || [];
+        const readRaw = entry.read || [];
+
+        if (!Array.isArray(ownedRaw) || !Array.isArray(readRaw)) {
+          throw new Error('INVALID_CATALOG_ENTRY');
+        }
+
+        const filtered = filterState(ownedRaw, readRaw, validIds);
+        results[catalogId] = filtered;
+        totals.owned += filtered.stats.owned;
+        totals.read += filtered.stats.read;
+        totals.skippedTotal += filtered.stats.skippedTotal;
+        totals.catalogCount += 1;
+      }
+
+      return { results, generatedAt, totals, format: 'multi' };
+    }
+
+    const isLegacyArray = Array.isArray(data);
+    const targetCatalogId = isLegacyArray
+      ? 'marvel-pl'
+      : data.catalog || 'marvel-pl';
+
+    if (!window.ComicShelfCatalog[targetCatalogId]) {
+      throw new Error('CATALOG_NOT_FOUND');
+    }
+
+    const validIds = getValidIds(targetCatalogId);
+    const single = parseBackup(jsonText, validIds, null);
+
+    results[targetCatalogId] = single;
+    totals.owned = single.stats.owned;
+    totals.read = single.stats.read;
+    totals.skippedTotal = single.stats.skippedTotal;
+    totals.catalogCount = 1;
+
+    return {
+      results,
+      generatedAt,
+      totals,
+      format: 'single',
+      targetCatalogId,
+    };
+  }
+
+  function applyAllBackup(parsed) {
+    for (const [catalogId, result] of Object.entries(parsed.results)) {
+      window.ComicShelfStorage.saveState(catalogId, result.owned, result.read);
+    }
   }
 
   function importMessage(result) {
@@ -119,10 +269,48 @@ window.ComicShelfBackup = (() => {
     return parts.join(' ');
   }
 
+  function importAllMessage(parsed) {
+    const parts = [];
+    const formattedDate = formatDate(parsed.generatedAt);
+
+    if (formattedDate) {
+      parts.push(`Wczytano kopię z ${formattedDate}.`);
+    } else {
+      parts.push('Wczytano kopię JSON.');
+    }
+
+    if (parsed.format === 'multi') {
+      for (const [catalogId, result] of Object.entries(parsed.results)) {
+        const name = window.ComicShelfCatalog[catalogId]?.name || catalogId;
+        parts.push(
+          `${name}: ${result.stats.owned} posiadanych, ${result.stats.read} przeczytanych.`
+        );
+      }
+    } else {
+      const catalogId = parsed.targetCatalogId;
+      const name = window.ComicShelfCatalog[catalogId]?.name || catalogId;
+      const result = parsed.results[catalogId];
+      parts.push(
+        `${name}: ${result.stats.owned} posiadanych, ${result.stats.read} przeczytanych.`
+      );
+    }
+
+    if (parsed.totals.skippedTotal > 0) {
+      parts.push(`Pominięto ${parsed.totals.skippedTotal} nieznanych ID.`);
+    }
+
+    return parts.join(' ');
+  }
+
   return {
     exportBackup,
+    exportAllBackup,
     downloadBackup,
+    downloadAllBackup,
     parseBackup,
+    parseAllBackup,
+    applyAllBackup,
     importMessage,
+    importAllMessage,
   };
 })();

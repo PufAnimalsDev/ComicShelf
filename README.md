@@ -1,19 +1,36 @@
 # ComicShelf
 
-Offline-first tracker for Polish Marvel comic collections. Mark owned and read issues, filter the catalog, and back up your progress as JSON.
+Offline-first tracker for Polish Marvel and DC comic collections. Log in with a password, pick a catalog from the home screen, and mark owned/read issues with JSON backups.
 
 **Live demo:** [https://pufanimalsdev.github.io/ComicShelf/](https://pufanimalsdev.github.io/ComicShelf/)
 
 ## Usage
 
-1. Open [`index.html`](index.html) in a browser (works offline from disk).
-2. Check **Posiadam** / **Przeczytane** for each issue.
-3. Use **Eksportuj kopię** to download a JSON backup.
-4. Use **Importuj kopię** to restore from a backup file.
+1. Open the app and enter your password.
+2. Pick a catalog tile (**Marvel PL** or **DC PL**).
+3. Check **Posiadam** / **Przeczytane** for each issue.
+4. Use filters to search and narrow the list.
+5. Use **Eksportuj kopię** / **Importuj kopię** to back up or restore progress.
 
 Data is stored in `localStorage` in the current browser. Export regularly if you switch devices or clear site data.
 
-## JSON backup format (v4)
+## Access (password)
+
+The app uses **client-side password protection** (SHA-256 hash, session in `sessionStorage`). This keeps casual visitors out but is not military-grade security — the hash is visible in the repo.
+
+Set or change your password locally:
+
+```bash
+node scripts/set-password.js "your-password"
+```
+
+This updates [`js/auth-config.js`](js/auth-config.js) with a new hash. Commit only the hash file, never the plaintext password.
+
+Default password after a fresh clone is `changeme` — change it before deploying.
+
+## JSON backup formats
+
+### v4 — single catalog (export from inside a catalog)
 
 ```json
 {
@@ -26,13 +43,39 @@ Data is stored in `localStorage` in the current browser. Export regularly if you
 }
 ```
 
+### v5 — all catalogs (export from home / catalog tiles)
+
+```json
+{
+  "app": "ComicShelf",
+  "version": 5,
+  "generatedAt": "2026-07-14T15:00:00.000Z",
+  "catalogs": {
+    "marvel-pl": {
+      "owned": ["..."],
+      "read": ["..."]
+    },
+    "dc-pl": {
+      "owned": ["..."],
+      "read": ["..."]
+    }
+  }
+}
+```
+
 | Field | Description |
 |-------|-------------|
 | `generatedAt` | ISO 8601 timestamp when the backup was created |
-| `catalog` | Catalog identifier (`marvel-pl`, `dc-pl`) |
+| `catalog` | Catalog identifier in v4 single exports (`marvel-pl`, `dc-pl`) |
+| `catalogs` | All catalog states in v5 multi exports |
 | `owned` / `read` | Arrays of comic IDs from the embedded catalog |
 
-**Backward compatibility:** legacy plain arrays (owned only) and v3 exports with `exportedAt` are still accepted on import.
+**Import behavior:**
+
+- **Home screen** — accepts v5 (all catalogs), v4 (one catalog from `catalog` field), or legacy array (Marvel PL only)
+- **Inside a catalog** — accepts v4 for that catalog, or v5 (only the matching catalog section is applied)
+
+**Backward compatibility:** legacy plain arrays (owned only) and v3 exports with `exportedAt` are still accepted.
 
 ## Project structure
 
@@ -41,13 +84,19 @@ ComicShelf/
 ├── index.html
 ├── css/styles.css
 ├── js/
-│   ├── catalog.js    # catalog registry
-│   ├── storage.js    # localStorage + legacy migration
-│   ├── backup.js     # JSON import/export
-│   └── app.js        # UI logic
+│   ├── auth-config.js  # password hash (set via set-password.js)
+│   ├── auth.js         # login / session
+│   ├── router.js       # view switching
+│   ├── home.js         # catalog tiles
+│   ├── catalog.js      # catalog registry
+│   ├── storage.js      # localStorage + legacy migration
+│   ├── backup.js       # JSON import/export
+│   └── app.js          # catalog list UI
 ├── data/
-│   ├── marvel-pl.js  # embedded catalog (594 comics)
-│   └── dc-pl.js      # embedded catalog (81 comics)
+│   ├── marvel-pl.js    # embedded catalog (594 comics)
+│   └── dc-pl.js        # embedded catalog (81 comics)
+├── scripts/
+│   └── set-password.js
 └── .github/workflows/pages.yml
 ```
 
@@ -72,8 +121,6 @@ gh auth login
 gh api repos/PufAnimalsDev/ComicShelf/pages -X POST -f build_type=workflow
 ```
 
-> The Node 20 deprecation notice in the log is informational only — `configure-pages@v5` still runs on Node 20 internally; it does not cause this failure.
-
 ## License
 
-Public catalog data is for personal collection tracking. Marvel characters and titles are property of Marvel Entertainment.
+Public catalog data is for personal collection tracking. Marvel and DC characters and titles are property of their respective owners.
