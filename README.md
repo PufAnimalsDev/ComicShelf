@@ -84,12 +84,15 @@ ComicShelf/
 │   ├── catalog.js      # catalog registry
 │   ├── storage.js      # localStorage + legacy migration
 │   ├── backup.js       # JSON import/export
-│   └── app.js          # catalog list UI
+│   ├── bootstrap.js    # initial-state seed loader
+│   └── app.js          # series list UI
 ├── data/
+│   ├── initial-state.json  # default state shipped with the app
 │   ├── marvel-pl.js    # embedded catalog (604 comics)
 │   └── dc-pl.js        # embedded catalog (81 comics)
 ├── scripts/
-│   └── set-password.js
+│   ├── set-password.js
+│   └── update-initial-state.js
 └── .github/workflows/pages.yml
 ```
 
