@@ -53,18 +53,24 @@ ComicShelf/
 
 Pushes to `main` deploy automatically to GitHub Pages via GitHub Actions.
 
-**One-time setup** (required before the first deploy succeeds):
+### One-time setup (required)
 
-1. Open [ComicShelf → Settings → Pages](https://github.com/PufAnimalsDev/ComicShelf/settings/pages).
-2. Under **Build and deployment**, set **Source** to **GitHub Actions**.
-3. Re-run the failed workflow from [Actions](https://github.com/PufAnimalsDev/ComicShelf/actions), or push any commit to `main`.
+If the workflow fails with `Get Pages site failed` / `Not Found`, GitHub Pages is not enabled yet. The workflow **cannot** enable it by itself — you must do this once in the repo settings:
 
-Alternatively, after installing and logging into GitHub CLI:
+1. Open **[Settings → Pages](https://github.com/PufAnimalsDev/ComicShelf/settings/pages)**.
+2. Under **Build and deployment**, set **Source** to **GitHub Actions** (not “Deploy from a branch”).
+3. Re-run the failed workflow from **[Actions](https://github.com/PufAnimalsDev/ComicShelf/actions)** (or use **Run workflow** on `Deploy GitHub Pages`).
+
+After that, every push to `main` deploys to `https://pufanimalsdev.github.io/ComicShelf/`.
+
+**Via GitHub CLI** (alternative to step 2):
 
 ```bash
 gh auth login
 gh api repos/PufAnimalsDev/ComicShelf/pages -X POST -f build_type=workflow
 ```
+
+> The Node 20 deprecation notice in the log is informational only — `configure-pages@v5` still runs on Node 20 internally; it does not cause this failure.
 
 ## License
 

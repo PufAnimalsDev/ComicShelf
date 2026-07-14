@@ -1,8 +1,11 @@
+# Requires one-time Pages enablement in repo Settings → Pages → Source: GitHub Actions.
+# GITHUB_TOKEN cannot create the Pages site automatically (see actions/configure-pages#40).
 name: Deploy GitHub Pages
 
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -22,7 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v4
         with:
           path: .
       - id: deployment
