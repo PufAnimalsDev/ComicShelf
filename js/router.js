@@ -3,6 +3,7 @@ window.ComicShelfRouter = (() => {
     auth: 'authView',
     home: 'homeView',
     catalog: 'catalogView',
+    collection: 'collectionView',
   };
 
   function showView(name) {
@@ -17,18 +18,32 @@ window.ComicShelfRouter = (() => {
   }
 
   function openCatalog(catalogId) {
-    window.ComicShelfApp.openCatalog(catalogId);
+    window.ComicShelfSeriesHome.render(catalogId);
     showView('catalog');
   }
 
+  function openCollection(catalogId, collectionName) {
+    window.ComicShelfApp.openCollection(catalogId, collectionName);
+    showView('collection');
+  }
+
   function goHome() {
-    window.ComicShelfApp.closeCatalog();
+    window.ComicShelfApp.closeCollection();
     window.ComicShelfHome.render();
     showView('home');
   }
 
+  function goCatalog() {
+    window.ComicShelfApp.closeCollection();
+    const catalogId = window.ComicShelfSeriesHome.getCatalogId();
+    if (catalogId) {
+      window.ComicShelfSeriesHome.render(catalogId);
+    }
+    showView('catalog');
+  }
+
   function logout() {
-    window.ComicShelfApp.closeCatalog();
+    window.ComicShelfApp.closeCollection();
     window.ComicShelfAuth.logout();
     showView('auth');
     document.getElementById('authPassword').value = '';
@@ -67,6 +82,7 @@ window.ComicShelfRouter = (() => {
 
   function init() {
     document.getElementById('backToHomeBtn').addEventListener('click', goHome);
+    document.getElementById('backToCatalogBtn').addEventListener('click', goCatalog);
     document.getElementById('logoutBtn').addEventListener('click', logout);
     bindAuthForm();
 
@@ -81,7 +97,9 @@ window.ComicShelfRouter = (() => {
   return {
     showView,
     openCatalog,
+    openCollection,
     goHome,
+    goCatalog,
     logout,
     init,
   };

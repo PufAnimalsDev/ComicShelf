@@ -4,11 +4,16 @@ window.ComicShelfApp = (() => {
 
   let catalogId = null;
   let catalogMeta = null;
+  let collectionName = null;
   let comics = [];
   let validIds = new Set();
   let owned = new Set();
   let read = new Set();
   let eventsBound = false;
+
+  function seriesComics() {
+    return comics.filter((x) => x.collection === collectionName);
+  }
 
   function save() {
     window.ComicShelfStorage.saveState(catalogId, owned, read);
@@ -17,13 +22,11 @@ window.ComicShelfApp = (() => {
 
   function filtered() {
     const q = $('search').value.trim().toLowerCase();
-    const collection = $('collection').value;
     const status = $('status').value;
     const readStatus = $('readStatus').value;
 
-    return comics.filter(
+    return seriesComics().filter(
       (x) =>
-        (!collection || x.collection === collection) &&
         (!q ||
           [x.title, x.original, x.contents, x.number]
             .join(' ')
@@ -35,14 +38,16 @@ window.ComicShelfApp = (() => {
   }
 
   function stats() {
-    const ownedCount = owned.size;
-    const total = comics.length;
+    const series = seriesComics();
+    const ownedCount = series.filter((x) => owned.has(x.id)).length;
+    const readCount = series.filter((x) => read.has(x.id)).length;
+    const total = series.length;
     const percent = total ? Math.round((ownedCount / total) * 100) : 0;
 
     $('ownedCount').textContent = ownedCount;
     $('missingCount').textContent = total - ownedCount;
-    $('readCount').textContent = read.size;
-    $('unreadCount').textContent = total - read.size;
+    $('readCount').textContent = readCount;
+    $('unreadCount').textContent = total - readCount;
     $('percent').textContent = `${percent}%`;
     $('bar').style.width = `${percent}%`;
   }
@@ -63,7 +68,7 @@ window.ComicShelfApp = (() => {
         (owned.has(comic.id) ? ' owned' : '') +
         (read.has(comic.id) ? ' read' : '');
 
-      el.innerHTML = `<div class="checks"><label class="check-label"><input class="check owned-check" type="checkbox" ${owned.has(comic.id) ? 'checked' : ''}>Posiadam</label><label class="check-label"><input class="check read-check" type="checkbox" ${read.has(comic.id) ? 'checked' : ''}>Przeczytane</label></div><div><div class="title">${escapeHtml(comic.title)}</div><div class="meta">${escapeHtml(comic.original || '')}${comic.date ? ' · ' + escapeHtml(comic.date) : ''}</div><div class="details">${escapeHtml(comic.contents || 'Brak opisu zawartości')}</div></div><span class="badge">${escapeHtml(comic.collection)} · #${escapeHtml(comic.number)}</span>`;
+      el.innerHTML = `<div class="checks"><label class="check-label"><input class="check owned-check" type="checkbox" ${owned.has(comic.id) ? 'checked' : ''}>Posiadam</label><label class="check-label"><input class="check read-check" type="checkbox" ${read.has(comic.id) ? 'checked' : ''}>Przeczytane</label></div><div><div class="title">${escapeHtml(comic.title)}</div><div class="meta">${escapeHtml(comic.original || '')}${comic.date ? ' · ' + escapeHtml(comic.date) : ''}</div><div class="details">${escapeHtml(comic.contents || 'Brak opisu zawartości')}</div></div><span class="badge">#${escapeHtml(comic.number)}</span>`;
 
       el.querySelector('.owned-check').onchange = (e) => {
         e.target.checked ? owned.add(comic.id) : owned.delete(comic.id);
@@ -87,20 +92,8 @@ window.ComicShelfApp = (() => {
     );
   }
 
-  function populateCollectionSelect() {
-    const select = $('collection');
-    select.innerHTML = '<option value="">Wszystkie kolekcje</option>';
-    [...new Set(comics.map((x) => x.collection))].forEach((collection) => {
-      const option = document.createElement('option');
-      option.value = collection;
-      option.textContent = collection;
-      select.appendChild(option);
-    });
-  }
-
   function resetFilters() {
     $('search').value = '';
-    $('collection').value = '';
     $('status').value = 'all';
     $('readStatus').value = 'all';
   }
@@ -109,14 +102,16 @@ window.ComicShelfApp = (() => {
     if (eventsBound) return;
     eventsBound = true;
 
-    ['search', 'collection', 'status', 'readStatus'].forEach((id) =>
+    ['search', 'status', 'readStatus'].forEach((id) =>
       $(id).addEventListener(id === 'search' ? 'input' : 'change', render)
     );
 
     $('resetBtn').onclick = () => {
-      if (confirm('Na pewno usunąć wszystkie oznaczenia posiadania i przeczytania?')) {
-        owned.clear();
-        read.clear();
+      if (confirm('Na pewno wyczyścić oznaczenia posiadania i przeczytania w tej serii?')) {
+        for (const comic of seriesComics()) {
+          owned.delete(comic.id);
+          read.delete(comic.id);
+        }
         save();
         render();
       }
@@ -155,30 +150,30 @@ window.ComicShelfApp = (() => {
     };
   }
 
-  function openCatalog(nextCatalogId) {
+  function openCollection(nextCatalogId, nextCollectionName) {
     catalogId = nextCatalogId;
+    collectionName = nextCollectionName;
     catalogMeta = window.ComicShelfCatalog[catalogId];
     comics = window[catalogMeta.dataKey] || [];
     validIds = new Set(comics.map((x) => x.id));
     ({ owned, read } = window.ComicShelfStorage.loadState(catalogId, validIds));
     window.ComicShelfStorage.saveActiveCatalog(catalogId);
 
-    $('catalogTitle').textContent = catalogMeta.name;
-    populateCollectionSelect();
+    $('collectionTitle').textContent = collectionName;
     resetFilters();
     bindEvents();
     stats();
     render();
   }
 
-  function closeCatalog() {
+  function closeCollection() {
     if (catalogId) {
       window.ComicShelfStorage.saveState(catalogId, owned, read);
     }
   }
 
   return {
-    openCatalog,
-    closeCatalog,
+    openCollection,
+    closeCollection,
   };
 })();

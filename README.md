@@ -8,9 +8,14 @@ Offline-first tracker for Polish Marvel and DC comic collections. Log in with a 
 
 1. Open the app and enter your password.
 2. Pick a catalog tile (**Marvel PL** or **DC PL**).
-3. Check **Posiadam** / **Przeczytane** for each issue.
-4. Use filters to search and narrow the list.
-5. Use **Eksportuj kopię** / **Importuj kopię** to back up or restore progress.
+3. Pick a series tile (e.g. **Marvel NOW! — Egmont**).
+4. Check **Posiadam** / **Przeczytane** for each issue.
+5. Use filters to search and narrow the list within that series.
+
+**Backup:**
+
+- **Home** — export/import all catalogs (JSON v5)
+- **Inside a series** — export/import the whole catalog (JSON v4); reset clears only the current series
 
 Data is stored in `localStorage` in the current browser. Export regularly if you switch devices or clear site data.
 

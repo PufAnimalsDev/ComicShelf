@@ -186,6 +186,10 @@ h1 {
   margin-bottom: 12px;
 }
 
+.collection-controls {
+  grid-template-columns: 2fr 1fr 1fr;
+}
+
 input,
 select,
 button {
