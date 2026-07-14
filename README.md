@@ -98,7 +98,7 @@ ComicShelf/
 │   ├── backup.js       # JSON import/export
 │   └── app.js          # catalog list UI
 ├── data/
-│   ├── marvel-pl.js    # embedded catalog (594 comics)
+│   ├── marvel-pl.js    # embedded catalog (604 comics)
 │   └── dc-pl.js        # embedded catalog (81 comics)
 ├── scripts/
 │   └── set-password.js
