@@ -1,22 +1,62 @@
 (() => {
-  const catalogMeta = window.ComicShelfCatalog[window.ComicShelfActiveCatalog];
-  const comics = window[catalogMeta.dataKey] || [];
-  const validIds = new Set(comics.map((x) => x.id));
-
-  let { owned, read } = window.ComicShelfStorage.loadState(validIds);
-
   const $ = (id) => document.getElementById(id);
   const list = $('list');
 
-  [...new Set(comics.map((x) => x.collection))].forEach((collection) => {
-    const option = document.createElement('option');
-    option.value = collection;
-    option.textContent = collection;
-    $('collection').appendChild(option);
-  });
+  let catalogId = window.ComicShelfStorage.loadActiveCatalog();
+  let catalogMeta = window.ComicShelfCatalog[catalogId];
+  let comics = window[catalogMeta.dataKey] || [];
+  let validIds = new Set(comics.map((x) => x.id));
+  let { owned, read } = window.ComicShelfStorage.loadState(catalogId, validIds);
+
+  function populateCatalogSelect() {
+    const select = $('catalog');
+    select.innerHTML = '';
+    for (const meta of Object.values(window.ComicShelfCatalog)) {
+      const option = document.createElement('option');
+      option.value = meta.id;
+      option.textContent = meta.name;
+      option.selected = meta.id === catalogId;
+      select.appendChild(option);
+    }
+  }
+
+  function populateCollectionSelect() {
+    const select = $('collection');
+    select.innerHTML = '<option value="">Wszystkie kolekcje</option>';
+    [...new Set(comics.map((x) => x.collection))].forEach((collection) => {
+      const option = document.createElement('option');
+      option.value = collection;
+      option.textContent = collection;
+      select.appendChild(option);
+    });
+  }
+
+  function resetFilters() {
+    $('search').value = '';
+    $('collection').value = '';
+    $('status').value = 'all';
+    $('readStatus').value = 'all';
+  }
+
+  function switchCatalog(nextCatalogId) {
+    if (nextCatalogId === catalogId) return;
+
+    window.ComicShelfStorage.saveState(catalogId, owned, read);
+    catalogId = nextCatalogId;
+    window.ComicShelfStorage.saveActiveCatalog(catalogId);
+    catalogMeta = window.ComicShelfCatalog[catalogId];
+    comics = window[catalogMeta.dataKey] || [];
+    validIds = new Set(comics.map((x) => x.id));
+    ({ owned, read } = window.ComicShelfStorage.loadState(catalogId, validIds));
+
+    populateCollectionSelect();
+    resetFilters();
+    stats();
+    render();
+  }
 
   function save() {
-    window.ComicShelfStorage.saveState(owned, read);
+    window.ComicShelfStorage.saveState(catalogId, owned, read);
     stats();
   }
 
@@ -91,6 +131,11 @@
       ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[m]
     );
   }
+
+  populateCatalogSelect();
+  populateCollectionSelect();
+
+  $('catalog').addEventListener('change', (e) => switchCatalog(e.target.value));
 
   ['search', 'collection', 'status', 'readStatus'].forEach((id) =>
     $(id).addEventListener(id === 'search' ? 'input' : 'change', render)

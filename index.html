@@ -10,7 +10,7 @@
   <header>
     <div class="wrap">
       <h1>ComicShelf</h1>
-      <p class="lead">Katalog Marvel PL — oznaczaj posiadane i przeczytane tomy. Dane zapisują się automatycznie w tej przeglądarce.</p>
+      <p class="lead">Katalogi komiksów PL — oznaczaj posiadane i przeczytane tomy. Dane zapisują się automatycznie w tej przeglądarce.</p>
     </div>
   </header>
   <main class="wrap" style="padding:0 20px">
@@ -22,6 +22,7 @@
       <div class="stat"><strong id="percent">0%</strong><span>ukończenia kolekcji</span><div class="progress"><div id="bar"></div></div></div>
     </section>
     <section class="controls">
+      <select id="catalog" aria-label="Katalog"></select>
       <input id="search" placeholder="Szukaj po tytule, oryginale lub zawartości…">
       <select id="collection"><option value="">Wszystkie kolekcje</option></select>
       <select id="status">
@@ -49,6 +50,7 @@
   </main>
   <footer>ComicShelf · offline · kopie JSON</footer>
   <script src="data/marvel-pl.js"></script>
+  <script src="data/dc-pl.js"></script>
   <script src="js/catalog.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/backup.js"></script>

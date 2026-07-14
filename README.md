@@ -29,7 +29,7 @@ Data is stored in `localStorage` in the current browser. Export regularly if you
 | Field | Description |
 |-------|-------------|
 | `generatedAt` | ISO 8601 timestamp when the backup was created |
-| `catalog` | Catalog identifier (`marvel-pl`) |
+| `catalog` | Catalog identifier (`marvel-pl`, `dc-pl`) |
 | `owned` / `read` | Arrays of comic IDs from the embedded catalog |
 
 **Backward compatibility:** legacy plain arrays (owned only) and v3 exports with `exportedAt` are still accepted on import.
@@ -45,7 +45,9 @@ ComicShelf/
 │   ├── storage.js    # localStorage + legacy migration
 │   ├── backup.js     # JSON import/export
 │   └── app.js        # UI logic
-├── data/marvel-pl.js # embedded catalog (594 comics)
+├── data/
+│   ├── marvel-pl.js  # embedded catalog (594 comics)
+│   └── dc-pl.js      # embedded catalog (81 comics)
 └── .github/workflows/pages.yml
 ```
 
