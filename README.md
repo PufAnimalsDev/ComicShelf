@@ -88,7 +88,7 @@ ComicShelf/
 │   └── app.js          # series list UI
 ├── data/
 │   ├── initial-state.json  # default state shipped with the app
-│   ├── marvel-pl.js    # embedded catalog (604 comics)
+│   ├── marvel-pl.js    # embedded catalog (622 comics)
 │   └── dc-pl.js        # embedded catalog (81 comics)
 ├── scripts/
 │   ├── set-password.js
@@ -109,6 +109,8 @@ If the workflow fails with `Get Pages site failed` / `Not Found`, GitHub Pages i
 3. Re-run the failed workflow from **[Actions](https://github.com/PufAnimalsDev/ComicShelf/actions)** (or use **Run workflow** on `Deploy GitHub Pages`).
 
 After that, every push to `main` deploys to `https://pufanimalsdev.github.io/ComicShelf/`.
+
+On deploy, CI runs `scripts/prepare-pages.js`: it stamps each CSS/JS/data URL with `?v=<commit>` so browsers fetch fresh files after an update (no manual cache clear needed). Your collection in `localStorage` is not touched.
 
 **Via GitHub CLI** (alternative to step 2):
 

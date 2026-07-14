@@ -1,5 +1,9 @@
 window.ComicShelfBootstrap = (() => {
-  const SEED_URL = 'data/initial-state.json';
+  const build = window.ComicShelfBuild;
+  const SEED_URL =
+    build && build !== 'dev'
+      ? `data/initial-state.json?v=${build}`
+      : 'data/initial-state.json';
 
   async function applySeedIfNeeded() {
     let response;
