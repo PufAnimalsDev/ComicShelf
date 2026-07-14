@@ -8,52 +8,90 @@
 </head>
 <body>
   <header>
-    <div class="wrap">
-      <h1>ComicShelf</h1>
-      <p class="lead">Katalogi komiksów PL — oznaczaj posiadane i przeczytane tomy. Dane zapisują się automatycznie w tej przeglądarce.</p>
+    <div class="wrap header-row">
+      <div>
+        <h1>ComicShelf</h1>
+        <p class="lead">Katalogi komiksów PL — oznaczaj posiadane i przeczytane tomy.</p>
+      </div>
+      <button type="button" id="logoutBtn" class="header-btn" hidden>Wyloguj</button>
     </div>
   </header>
-  <main class="wrap" style="padding:0 20px">
-    <section class="stats">
-      <div class="stat"><strong id="ownedCount">0</strong><span>posiadanych</span></div>
-      <div class="stat"><strong id="missingCount">0</strong><span>brakujących</span></div>
-      <div class="stat"><strong id="readCount">0</strong><span>przeczytanych</span></div>
-      <div class="stat"><strong id="unreadCount">0</strong><span>nieprzeczytanych</span></div>
-      <div class="stat"><strong id="percent">0%</strong><span>ukończenia kolekcji</span><div class="progress"><div id="bar"></div></div></div>
+
+  <main class="wrap main-content">
+    <section id="authView" class="view">
+      <div class="auth-card">
+        <h2>Wejdź do ComicShelf</h2>
+        <p class="auth-lead">Podaj hasło, aby otworzyć swoje kolekcje.</p>
+        <form id="authForm">
+          <label class="auth-label" for="authPassword">Hasło</label>
+          <input id="authPassword" type="password" autocomplete="current-password" required>
+          <p id="authError" class="auth-error" hidden></p>
+          <button type="submit" class="primary auth-submit">Wejdź</button>
+        </form>
+      </div>
     </section>
-    <section class="controls">
-      <select id="catalog" aria-label="Katalog"></select>
-      <input id="search" placeholder="Szukaj po tytule, oryginale lub zawartości…">
-      <select id="collection"><option value="">Wszystkie kolekcje</option></select>
-      <select id="status">
-        <option value="all">Wszystkie wg posiadania</option>
-        <option value="owned">Posiadane</option>
-        <option value="missing">Brakujące</option>
-      </select>
-      <select id="readStatus">
-        <option value="all">Wszystkie wg czytania</option>
-        <option value="read">Przeczytane</option>
-        <option value="unread">Nieprzeczytane</option>
-      </select>
+
+    <section id="homeView" class="view" hidden>
+      <h2 class="view-title">Twoje katalogi</h2>
+      <div class="actions home-actions">
+        <button id="exportAllBtn" class="primary">Eksportuj wszystkie katalogi</button>
+        <button id="importAllBtn">Importuj wszystkie katalogi</button>
+        <input type="file" id="importAllFile" accept="application/json" hidden>
+      </div>
+      <div id="catalogGrid" class="catalog-grid"></div>
     </section>
-    <div class="actions">
-      <button class="primary" id="markVisible">Oznacz widoczne jako posiadane</button>
-      <button id="unmarkVisible">Odznacz posiadanie</button>
-      <button id="markReadVisible">Oznacz widoczne jako przeczytane</button>
-      <button id="unmarkReadVisible">Odznacz przeczytanie</button>
-      <button id="exportBtn">Eksportuj kopię</button>
-      <button id="importBtn">Importuj kopię</button>
-      <input type="file" id="importFile" accept="application/json" hidden>
-      <button id="resetBtn">Wyczyść kolekcję</button>
-    </div>
-    <section id="list" class="list"></section>
+
+    <section id="catalogView" class="view" hidden>
+      <div class="view-header">
+        <button type="button" id="backToHomeBtn" class="back-btn">← Katalogi</button>
+        <h2 id="catalogTitle" class="view-title"></h2>
+      </div>
+
+      <section class="stats">
+        <div class="stat"><strong id="ownedCount">0</strong><span>posiadanych</span></div>
+        <div class="stat"><strong id="missingCount">0</strong><span>brakujących</span></div>
+        <div class="stat"><strong id="readCount">0</strong><span>przeczytanych</span></div>
+        <div class="stat"><strong id="unreadCount">0</strong><span>nieprzeczytanych</span></div>
+        <div class="stat"><strong id="percent">0%</strong><span>ukończenia kolekcji</span><div class="progress"><div id="bar"></div></div></div>
+      </section>
+
+      <section class="controls">
+        <input id="search" placeholder="Szukaj po tytule, oryginale lub zawartości…">
+        <select id="collection"><option value="">Wszystkie kolekcje</option></select>
+        <select id="status">
+          <option value="all">Wszystkie wg posiadania</option>
+          <option value="owned">Posiadane</option>
+          <option value="missing">Brakujące</option>
+        </select>
+        <select id="readStatus">
+          <option value="all">Wszystkie wg czytania</option>
+          <option value="read">Przeczytane</option>
+          <option value="unread">Nieprzeczytane</option>
+        </select>
+      </section>
+
+      <div class="actions">
+        <button id="exportBtn">Eksportuj ten katalog</button>
+        <button id="importBtn">Importuj do tego katalogu</button>
+        <input type="file" id="importFile" accept="application/json" hidden>
+        <button id="resetBtn">Wyczyść kolekcję</button>
+      </div>
+
+      <section id="list" class="list"></section>
+    </section>
   </main>
+
   <footer>ComicShelf · offline · kopie JSON</footer>
+
   <script src="data/marvel-pl.js"></script>
   <script src="data/dc-pl.js"></script>
+  <script src="js/auth-config.js"></script>
   <script src="js/catalog.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/backup.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/home.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/router.js"></script>
 </body>
 </html>

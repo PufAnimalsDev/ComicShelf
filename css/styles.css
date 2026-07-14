@@ -40,6 +40,121 @@ h1 {
   color: #d0d5dd;
 }
 
+.header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.header-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: white;
+  flex-shrink: 0;
+}
+
+.main-content {
+  padding: 0 20px 40px;
+}
+
+.view-title {
+  margin: 18px 0 16px;
+  font-size: clamp(22px, 3vw, 30px);
+}
+
+.auth-card {
+  max-width: 420px;
+  margin: 48px auto;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 28px;
+}
+
+.auth-card h2 {
+  margin: 0 0 8px;
+  font-size: 24px;
+}
+
+.auth-lead {
+  margin: 0 0 20px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.auth-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.auth-submit {
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px;
+}
+
+.auth-error {
+  margin: 12px 0 0;
+  color: var(--accent);
+  font-size: 13px;
+}
+
+.catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  padding-bottom: 24px;
+}
+
+.catalog-tile {
+  text-align: left;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 20px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.catalog-tile:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 16px rgba(23, 25, 35, 0.08);
+}
+
+.catalog-tile-title {
+  font-size: 20px;
+  font-weight: 750;
+  margin-bottom: 6px;
+}
+
+.catalog-tile-desc {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+.catalog-tile-stats {
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.view-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 18px 0 0;
+}
+
+.view-header .view-title {
+  margin: 0;
+}
+
+.back-btn {
+  flex-shrink: 0;
+}
+
 .stats {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -66,7 +181,7 @@ h1 {
 
 .controls {
   display: grid;
-  grid-template-columns: 1fr 2fr 1.3fr 1fr 1fr;
+  grid-template-columns: 2fr 1.3fr 1fr 1fr;
   gap: 10px;
   margin-bottom: 12px;
 }
@@ -91,6 +206,10 @@ select {
   gap: 8px;
   flex-wrap: wrap;
   margin-bottom: 16px;
+}
+
+.home-actions {
+  margin-bottom: 20px;
 }
 
 button {
@@ -230,6 +349,14 @@ footer {
 }
 
 @media (max-width: 720px) {
+  .catalog-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .header-row {
+    flex-direction: column;
+  }
+
   .controls {
     grid-template-columns: 1fr;
   }
