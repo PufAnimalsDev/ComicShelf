@@ -1,0 +1,28 @@
+{
+  "app": "ComicShelf",
+  "version": 5,
+  "generatedAt": "2026-07-14T18:44:07.625Z",
+  "catalogs": {
+    "marvel-pl": {
+      "owned": [
+        "Marvel Action — Panini/Carrefour|10|Kapitan Marvel - Skala bohaterstwa",
+        "Marvel Action — Panini/Carrefour|9|Kapitan Marvel - Kosmiczna katastrofa",
+        "Marvel Action — Panini/Carrefour|8|Spider-Man - Venom",
+        "Marvel Action — Panini/Carrefour|7|Spider-Man - Pech",
+        "Marvel Action — Panini/Carrefour|6|Spider-Man - W pogoni za pająkiem",
+        "Marvel Action — Panini/Carrefour|5|Spider-Man - Nowy początek",
+        "Marvel Action — Panini/Carrefour|4|Avengers - Koszmar na jawie",
+        "Marvel Action — Panini/Carrefour|3|Avengers - Strachojady",
+        "Marvel Action — Panini/Carrefour|2|Avengers - Rubin przejścia",
+        "Marvel Action — Panini/Carrefour|1|Avengers - Nowe zagrożenie"
+      ],
+      "read": []
+    },
+    "dc-pl": {
+      "owned": [
+        "DC Comics — Egmont|3|Green Arrow: Kołczan, część 1"
+      ],
+      "read": []
+    }
+  }
+}

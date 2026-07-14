@@ -2,7 +2,7 @@ window.ComicShelfCatalog = {
   'marvel-pl': {
     id: 'marvel-pl',
     name: 'Marvel PL',
-    description: '594 tomów · 14 serii wydawniczych',
+    description: '604 tomów · 15 serii wydawniczych',
     dataKey: 'MARVEL_COMIC_CATALOG',
   },
   'dc-pl': {

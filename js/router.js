@@ -3,6 +3,7 @@ window.ComicShelfRouter = (() => {
     auth: 'authView',
     home: 'homeView',
     catalog: 'catalogView',
+    collection: 'collectionView',
   };
 
   function showView(name) {
@@ -16,19 +17,39 @@ window.ComicShelfRouter = (() => {
     }
   }
 
+  async function enterApp() {
+    await window.ComicShelfBootstrap.applySeedIfNeeded();
+    window.ComicShelfHome.init();
+    showView('home');
+  }
+
   function openCatalog(catalogId) {
-    window.ComicShelfApp.openCatalog(catalogId);
+    window.ComicShelfSeriesHome.render(catalogId);
     showView('catalog');
   }
 
+  function openCollection(catalogId, collectionName) {
+    window.ComicShelfApp.openCollection(catalogId, collectionName);
+    showView('collection');
+  }
+
   function goHome() {
-    window.ComicShelfApp.closeCatalog();
+    window.ComicShelfApp.closeCollection();
     window.ComicShelfHome.render();
     showView('home');
   }
 
+  function goCatalog() {
+    window.ComicShelfApp.closeCollection();
+    const catalogId = window.ComicShelfSeriesHome.getCatalogId();
+    if (catalogId) {
+      window.ComicShelfSeriesHome.render(catalogId);
+    }
+    showView('catalog');
+  }
+
   function logout() {
-    window.ComicShelfApp.closeCatalog();
+    window.ComicShelfApp.closeCollection();
     window.ComicShelfAuth.logout();
     showView('auth');
     document.getElementById('authPassword').value = '';
@@ -53,8 +74,7 @@ window.ComicShelfRouter = (() => {
         }
 
         passwordInput.value = '';
-        window.ComicShelfHome.init();
-        showView('home');
+        await enterApp();
       } catch (err) {
         errorEl.textContent =
           err.message === 'AUTH_NOT_CONFIGURED'
@@ -67,12 +87,12 @@ window.ComicShelfRouter = (() => {
 
   function init() {
     document.getElementById('backToHomeBtn').addEventListener('click', goHome);
+    document.getElementById('backToCatalogBtn').addEventListener('click', goCatalog);
     document.getElementById('logoutBtn').addEventListener('click', logout);
     bindAuthForm();
 
     if (window.ComicShelfAuth.isAuthenticated()) {
-      window.ComicShelfHome.init();
-      showView('home');
+      enterApp();
     } else {
       showView('auth');
     }
@@ -81,7 +101,9 @@ window.ComicShelfRouter = (() => {
   return {
     showView,
     openCatalog,
+    openCollection,
     goHome,
+    goCatalog,
     logout,
     init,
   };

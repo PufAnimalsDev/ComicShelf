@@ -244,9 +244,10 @@ window.ComicShelfBackup = (() => {
     };
   }
 
-  function applyAllBackup(parsed) {
+  function applyAllBackup(parsed, options = {}) {
+    const { user = true } = options;
     for (const [catalogId, result] of Object.entries(parsed.results)) {
-      window.ComicShelfStorage.saveState(catalogId, result.owned, result.read);
+      window.ComicShelfStorage.saveState(catalogId, result.owned, result.read, { user });
     }
   }
 

@@ -11,12 +11,8 @@ window.ComicShelfStorage = (() => {
     return `comicshelf-read-v1-${catalogId}`;
   }
 
-  function readJson(key) {
-    try {
-      return JSON.parse(localStorage.getItem(key) || '[]');
-    } catch {
-      return [];
-    }
+  function userStateKey(catalogId) {
+    return `comicshelf-user-state-v1-${catalogId}`;
   }
 
   function readJsonFromRaw(raw) {
@@ -49,6 +45,18 @@ window.ComicShelfStorage = (() => {
     return [...new Set(ids)].filter((id) => validIds.has(id));
   }
 
+  function hasUserState(catalogId) {
+    return localStorage.getItem(userStateKey(catalogId)) === '1';
+  }
+
+  function hasStoredState(catalogId) {
+    return localStorage.getItem(ownedKey(catalogId)) !== null;
+  }
+
+  function shouldApplySeed(catalogId) {
+    return !hasUserState(catalogId) && !hasStoredState(catalogId);
+  }
+
   function loadActiveCatalog() {
     const saved = localStorage.getItem(ACTIVE_CATALOG_KEY);
     if (saved && window.ComicShelfCatalog[saved]) return saved;
@@ -62,28 +70,41 @@ window.ComicShelfStorage = (() => {
   function loadState(catalogId, validIds) {
     let ownedRaw = localStorage.getItem(ownedKey(catalogId));
     let readRaw = localStorage.getItem(readKey(catalogId));
+    let migrated = false;
 
     if (!ownedRaw && catalogId === 'marvel-pl') {
       const legacyOwned = findLegacyOwned();
-      if (legacyOwned) ownedRaw = legacyOwned;
+      if (legacyOwned) {
+        ownedRaw = legacyOwned;
+        migrated = true;
+      }
     }
 
     if (!readRaw && catalogId === 'marvel-pl') {
       const legacyRead = findLegacyRead();
-      if (legacyRead) readRaw = legacyRead;
+      if (legacyRead) {
+        readRaw = legacyRead;
+        migrated = true;
+      }
     }
 
     const owned = new Set(sanitizeIds(readJsonFromRaw(ownedRaw), validIds));
     const read = new Set(sanitizeIds(readJsonFromRaw(readRaw), validIds));
 
-    saveState(catalogId, owned, read);
+    if (migrated) {
+      saveState(catalogId, owned, read, { user: true });
+    }
 
     return { owned, read };
   }
 
-  function saveState(catalogId, owned, read) {
+  function saveState(catalogId, owned, read, options = {}) {
+    const { user = true } = options;
     localStorage.setItem(ownedKey(catalogId), JSON.stringify([...owned]));
     localStorage.setItem(readKey(catalogId), JSON.stringify([...read]));
+    if (user) {
+      localStorage.setItem(userStateKey(catalogId), '1');
+    }
   }
 
   return {
@@ -91,5 +112,8 @@ window.ComicShelfStorage = (() => {
     saveActiveCatalog,
     loadState,
     saveState,
+    hasUserState,
+    hasStoredState,
+    shouldApplySeed,
   };
 })();
