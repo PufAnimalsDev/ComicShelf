@@ -88,7 +88,7 @@ ComicShelf/
 │   └── app.js          # series list UI
 ├── data/
 │   ├── initial-state.json  # default state shipped with the app
-│   ├── marvel-pl.js    # embedded catalog (622 comics)
+│   ├── marvel-pl.js    # embedded catalog (627 comics)
 │   └── dc-pl.js        # embedded catalog (81 comics)
 ├── scripts/
 │   ├── set-password.js
